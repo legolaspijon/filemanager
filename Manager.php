@@ -11,6 +11,7 @@ class Manager
 
     private function __construct()
     {
+        session_start();
         $this->setSort();
         $this->setOrder();
         $this->setCatalog();
@@ -32,7 +33,7 @@ class Manager
     {
         if (isset($_GET['s'])) {
             $this->sort = $_GET['s'];
-            setcookie('s', $_GET['s']);
+            $_SESSION['s'] =  $_GET['s'];
         }
     }
 
@@ -73,7 +74,7 @@ class Manager
                     $dirs[$file] = [
                         'type' => 'd',
                         'date_create' => filemtime($this->catalogPath . '/' . $file),
-                        'path' => $this->catalogPath . '/' . $file,
+                        'path' => $this->catalogPath . '\\' . $file,
                         'fileType' => filetype($this->catalogPath . '/' . $file),
                     ];
                 }
@@ -116,9 +117,11 @@ class Manager
         $table = "<table class='table table-striped'>";
         $tr = '';
 
-        if ($_COOKIE['s'] == $this->sort) {
+        if ($_SESSION['s'] == $this->sort) {
+            echo "==";
             $order = $this->order == 'd' ? 'a' : 'd';
         } else {
+            echo "!=";
             $order = 'a';
         }
 
@@ -129,7 +132,7 @@ class Manager
                     <th>last changed</th>
                     </tr>
                     <tr>
-                        <td colspan='4'><a href='/?dir={$this->catalogPath}/..'><span class='glyphicon glyphicon-arrow-left'></span>&nbspBACK</a></td>
+                        <td colspan='4'><a href='/?dir={$this->catalogPath}\\..'><span class='glyphicon glyphicon-arrow-left'></span>&nbspBACK</a></td>
                     </tr>";
         foreach ($files as $filename => $fileParam) {
             $filePath = $this->catalogPath . '/' . $filename;
@@ -166,12 +169,11 @@ class Manager
 
     public function sortByName($files)
     {
-        if ($this->order == 'a') {
-            ksort($files);
-        } elseif ($this->order == 'd') {
-            ksort($files);
+        ksort($files);
+        if ($this->order == 'd') {
             $files = array_reverse($files);
         }
+
         return $files;
     }
 
@@ -186,7 +188,6 @@ class Manager
             array_multisort($fieldsSort, SORT_ASC, $files);
         } elseif ($this->order == 'd') {
             array_multisort($fieldsSort, SORT_DESC, $files);
-            $files = array_reverse($files);
         }
 
         return $files;
